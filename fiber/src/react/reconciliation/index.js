@@ -39,7 +39,6 @@ function reconcileChildren(fiber, children) {
       tag: getTag(element),
       effects: [],
       effectTag: "placement",
-      stateNode: null,
       parent: fiber,
     };
 
@@ -57,8 +56,13 @@ function reconcileChildren(fiber, children) {
 }
 
 function executeTask(fiber) {
-  // 编排子节点关系
-  reconcileChildren(fiber, fiber.props.children);
+  if (fiber.tag === "class_component") {
+    reconcileChildren(fiber, fiber.stateNode.render());
+  } else {
+    // 编排子节点关系
+    reconcileChildren(fiber, fiber.props.children);
+  }
+
   if (fiber.child) {
     return fiber.child;
   }
@@ -89,7 +93,14 @@ function executeTask(fiber) {
 function commitAllWork(fiber) {
   fiber.effects.forEach((item) => {
     if (item.effectTag === "placement") {
-      item.parent.stateNode.appendChild(item.stateNode); // 将fiber对应的dom追加至根节点的dom
+      let fiber = item;
+      let parentFiber = item.parent;
+      while (parentFiber.tag === "class_component") {
+        parentFiber = parentFiber.parent; // 如是类组件，向上找到普通的节点
+      }
+      if (fiber.tag === "host_component") {
+        parentFiber.stateNode.appendChild(fiber.stateNode); // 将fiber对应的dom追加至根节点的dom
+      }
     }
   });
 }

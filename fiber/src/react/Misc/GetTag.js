@@ -1,4 +1,7 @@
+import Component from "../Component";
+
 export default function getTag(vdom) {
   if (typeof vdom.type === "string") return "host_component";
-  return "";
+  if (Object.getPrototypeOf(vdom.type) === Component) return "class_component";
+  return "function_component";
 }
