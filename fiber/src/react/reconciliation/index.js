@@ -4,11 +4,23 @@ const taskQueue = createTaskQueue();
 
 let subTask = null;
 
+/**
+ * 从人物队列中获取任务
+ */
 function getFirstTask() {
-  return null;
+  const task = taskQueue.pop();
+  // 返回最外层的fiber对象
+  return {
+    props: task.props,
+    stateNode: task.dom,
+    tag: 'host_root',
+    effects: [],
+    child: null,
+  }
 }
 
 function executeTask(fiber) {
+  console.log(fiber)
   return null;
 }
 

@@ -4,6 +4,6 @@ export default function createTaskQueue() {
   return {
     push: (task) => taskQueue.push(task),
     pop: () => taskQueue.shift(),
-    isEmpty: () => taskQueue.length === 0,ƒ
+    isEmpty: () => taskQueue.length === 0,
   };
 }
