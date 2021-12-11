@@ -56,10 +56,12 @@ function reconcileChildren(fiber, children) {
 }
 
 function executeTask(fiber) {
+  // 构建子级fiber
   if (fiber.tag === "class_component") {
     reconcileChildren(fiber, fiber.stateNode.render());
+  } else if (fiber.tag === "function_component") {
+    reconcileChildren(fiber, fiber.stateNode(fiber.props));
   } else {
-    // 编排子节点关系
     reconcileChildren(fiber, fiber.props.children);
   }
 
@@ -95,7 +97,10 @@ function commitAllWork(fiber) {
     if (item.effectTag === "placement") {
       let fiber = item;
       let parentFiber = item.parent;
-      while (parentFiber.tag === "class_component") {
+      while (
+        parentFiber.tag === "class_component" ||
+        parentFiber.tag === "function_component"
+      ) {
         parentFiber = parentFiber.parent; // 如是类组件，向上找到普通的节点
       }
       if (fiber.tag === "host_component") {

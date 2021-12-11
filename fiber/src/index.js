@@ -11,14 +11,20 @@ const root = document.getElementById("root");
 //
 // render(jsx, root);
 
-class Greeting extends Component {
-  constructor(props) {
-    super(props);
-  }
+// class Greeting extends Component {
+//   constructor(props) {
+//     super(props);
+//   }
+//
+//   render() {
+//     return <div>{this.props.title} hahaha</div>;
+//   }
+// }
 
-  render() {
-    return <div>hahaha</div>;
-  }
+// render(<Greeting title={'Hello'} />, root);
+
+function Greeting(props) {
+  return <div>{props.title} hahaha</div>;
 }
 
-render(<Greeting />, root);
+render(<Greeting title={"Hello"} />, root);
