@@ -57,8 +57,11 @@ function reconcileChildren(fiber, children) {
 function executeTask(fiber) {
   // 编排子节点关系
   reconcileChildren(fiber, fiber.props.children);
+  if (fiber.child) {
+    return fiber.child;
+  }
   console.log(fiber);
-  return null;
+  return;
 }
 
 function workLoop(deadline) {
