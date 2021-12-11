@@ -1,6 +1,34 @@
-import { createTaskQueue } from "../Misc";
+import {createTaskQueue} from "../Misc";
 
 const taskQueue = createTaskQueue();
+
+let subTask = null;
+
+function getFirstTask() {
+  return null;
+}
+
+function executeTask(fiber) {
+  return null;
+}
+
+function workLoop(deadline) {
+  if (!subTask) {
+    subTask = getFirstTask()
+  }
+
+  while (subTask && deadline.timeRemaining() > 1) {
+    subTask = executeTask(subTask)
+  }
+}
+
+function performTask(deadline) {
+  workLoop(deadline);
+
+  if (subTask || !taskQueue.isEmpty()) {
+    requestIdleCallback(performTask)
+  }
+}
 
 export function render(element, dom) {
   /**
@@ -13,8 +41,8 @@ export function render(element, dom) {
    */
   taskQueue.push({
     dom,
-    props: { children: element },
+    props: {children: element},
   });
 
-  console.log(taskQueue.pop());
+  requestIdleCallback(performTask)
 }
