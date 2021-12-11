@@ -147,10 +147,10 @@ function commitAllWork(fiber) {
     } else if (item.effectTag === "update") {
       // 更新
       if (item.type === item.alternate.type) {
-        // 节点类型相同
+        // 节点类型相同，执行更新算法
         updateNodeElement(item.stateNode, item, item.alternate); // TODO: 只能处理元素节点，不能处理文本节点
       } else {
-        // 节点类型不同
+        // 节点类型不同，做替换的DOM操作
         item.parent.stateNode.replaceChild(
           item.stateNode, // 新节点
           item.alternate.stateNode // 旧节点

@@ -6,6 +6,32 @@ export default function updateNodeElement(
   // 获取节点对应的属性对象
   const newProps = virtualDOM.props || {};
   const oldProps = oldVirtualDOM.props || {};
+
+  /**
+   * 处理文本节点
+   */
+  if (virtualDOM.type === "text") {
+    if (newProps.textContent === oldProps.textContent) return;
+    // 文本节点更新
+    if (virtualDOM.parent.type !== oldVirtualDOM.parent.type) {
+      // 新旧文本fiber节点的父级不同
+      // 此时父级dom没有子元素, 则直接在新fiber的父级dom上添加此新的文本节点
+      virtualDOM.parent.stateNode.appendChild(
+        document.createTextNode(newProps.textContent)
+      );
+    } else {
+      // 否则，此时父级dom是复用之前的, 执行替换操作
+      virtualDOM.parent.stateNode.replaceChild(
+        document.createTextNode(newProps.textContent),
+        oldVirtualDOM.stateNode
+      );
+    }
+    return;
+  }
+
+  /**
+   * 处理元素节点
+   */
   Object.keys(newProps).forEach((propName) => {
     // 获取属性值
     const newPropsValue = newProps[propName];

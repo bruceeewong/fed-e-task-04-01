@@ -13,7 +13,7 @@ render(jsx, root);
 setTimeout(() => {
   const jsx = (
     <div>
-      <p>奥利给</p>
+      <div>奥利给</div>
       <p>Goodbye React</p>
     </div>
   );
