@@ -4,6 +4,8 @@ const taskQueue = createTaskQueue();
 
 let subTask = null;
 
+let pendingCommit = null;
+
 /**
  * 从人物队列中获取任务
  */
@@ -64,23 +66,43 @@ function executeTask(fiber) {
   let currentExecutingFiber = fiber;
 
   while (currentExecutingFiber.parent) {
+    // 合并子节点的effects至父级节点的effects中
+    currentExecutingFiber.parent.effects =
+      currentExecutingFiber.parent.effects.concat(
+        currentExecutingFiber.effects.concat([currentExecutingFiber])
+      );
+
     if (currentExecutingFiber.sibling) {
+      // 如果有兄弟节点，返回兄弟节点给任务调度
       return currentExecutingFiber.sibling;
     }
     currentExecutingFiber = currentExecutingFiber.parent;
   }
 
-  console.log(fiber);
-  return;
+  pendingCommit = currentExecutingFiber; // 保存最外层节点的Fiber引用
+}
+
+/**
+ * 提交所有任务
+ * @param fiber 最外层节点的Fiber对象
+ */
+function commitAllWork(fiber) {
+  fiber.effects.forEach((item) => {
+    if (item.effectTag === "placement") {
+      item.parent.stateNode.appendChild(item.stateNode); // 将fiber对应的dom追加至根节点的dom
+    }
+  });
 }
 
 function workLoop(deadline) {
   if (!subTask) {
     subTask = getFirstTask();
   }
-
   while (subTask && deadline.timeRemaining() > 1) {
     subTask = executeTask(subTask);
+  }
+  if (pendingCommit) {
+    commitAllWork(pendingCommit);
   }
 }
 
