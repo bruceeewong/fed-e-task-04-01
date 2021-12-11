@@ -38,11 +38,12 @@ function reconcileChildren(fiber, children) {
     alternate = fiber.alternate.child; // 只有第一个子节点是child
   }
 
-  while (index < numberOfElements) {
+  // 如果有子节点 或 没有当前子节点但有旧节点，执行构建fiber
+  while (index < numberOfElements || alternate) {
     element = arrifiedChildren[index];
 
     if (element && !alternate) {
-      // 初始渲染
+      // 构建初始fiber
       newFiber = {
         type: element.type,
         props: element.props,
@@ -54,7 +55,7 @@ function reconcileChildren(fiber, children) {
 
       newFiber.stateNode = createStateNode(newFiber);
     } else if (element && alternate) {
-      // 更新操作
+      // 构建更新fiber
       newFiber = {
         type: element.type,
         props: element.props,
@@ -73,11 +74,19 @@ function reconcileChildren(fiber, children) {
         // 类型不同，直接替换dom
         newFiber.stateNode = createStateNode(newFiber);
       }
+    } else if (!element && alternate) {
+      console.log("构建删除fiber", {
+        element,
+        alternate,
+      });
+      // 构建删除fiber
+      alternate.effectTag = "delete";
+      fiber.effects.push(alternate);
     }
 
     if (index === 0) {
       fiber.child = newFiber;
-    } else {
+    } else if (element) {
       prevFiber.sibling = newFiber;
     }
 
@@ -130,6 +139,7 @@ function executeTask(fiber) {
  * @param fiber 最外层节点的Fiber对象
  */
 function commitAllWork(fiber) {
+  console.log("commitAllWork", fiber);
   // 循环 effects 数组，构建 DOM 节点树
   fiber.effects.forEach((item) => {
     if (item.effectTag === "placement") {
@@ -156,6 +166,13 @@ function commitAllWork(fiber) {
           item.alternate.stateNode // 旧节点
         );
       }
+    } else if (item.effectTag === "delete") {
+      console.log("执行删除操作", {
+        parent: item.parent,
+        fiber: item,
+      });
+      // 删除
+      item.parent.stateNode.removeChild(item.stateNode);
     }
   });
 
@@ -184,6 +201,7 @@ function performTask(deadline) {
 }
 
 export function render(element, dom) {
+  console.log("render element", element);
   /**
    * 1. 向任务队列中添加任务
    * 2. 指定在浏览器空闲时执行任务

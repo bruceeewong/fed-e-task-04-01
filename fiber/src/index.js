@@ -4,16 +4,16 @@ const root = document.getElementById("root");
 
 const jsx = (
   <div>
-    <p>Hello React</p>
+    <div>Hello React</div>
     <p>Goodbye React</p>
   </div>
 );
 
 render(jsx, root);
+
 setTimeout(() => {
   const jsx = (
     <div>
-      <div>奥利给</div>
       <p>Goodbye React</p>
     </div>
   );
