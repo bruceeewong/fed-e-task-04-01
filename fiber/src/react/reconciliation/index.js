@@ -1,4 +1,10 @@
-import { arrified, createStateNode, createTaskQueue, getTag } from "../Misc";
+import {
+  arrified,
+  createStateNode,
+  createTaskQueue,
+  getRoot,
+  getTag,
+} from "../Misc";
 import { updateNodeElement } from "../DOM";
 
 const taskQueue = createTaskQueue();
@@ -8,10 +14,25 @@ let subTask = null;
 let pendingCommit = null;
 
 /**
- * 从人物队列中获取任务
+ * 构建并返回根节点fiber
  */
 function getFirstTask() {
   const task = taskQueue.pop();
+
+  // 组件更新任务
+  if (task.from === "class_component") {
+    const root = getRoot(task.instance);
+    task.instance.__fiber.partialState = task.partialState;
+    return {
+      props: root.props,
+      stateNode: root.stateNode,
+      tag: "host_root",
+      effects: [],
+      child: null,
+      alternate: root,
+    };
+  }
+
   // 返回最外层的fiber对象
   return {
     props: task.props,
@@ -102,6 +123,16 @@ function reconcileChildren(fiber, children) {
 }
 
 function executeTask(fiber) {
+  if (fiber.tag === "class_component") {
+    if (fiber.stateNode.__fiber && fiber.stateNode.__fiber.partialState) {
+      // 是类组件且需要更新状态
+      fiber.stateNode.state = {
+        ...fiber.stateNode.state,
+        ...fiber.stateNode.__fiber.partialState,
+      };
+    }
+  }
+
   // 构建子级fiber
   if (fiber.tag === "class_component") {
     reconcileChildren(fiber, fiber.stateNode.render());
@@ -139,9 +170,13 @@ function executeTask(fiber) {
  * @param fiber 最外层节点的Fiber对象
  */
 function commitAllWork(fiber) {
-  console.log("commitAllWork", fiber);
   // 循环 effects 数组，构建 DOM 节点树
   fiber.effects.forEach((item) => {
+    // 如果当前fiber是类组件，则把fiber挂载到class实例上
+    if (item.tag === "class_component") {
+      item.stateNode.__fiber = item;
+    }
+
     if (item.effectTag === "placement") {
       let fiber = item;
       let parentFiber = item.parent;
@@ -180,7 +215,12 @@ function commitAllWork(fiber) {
   fiber.stateNode.__rootFiberContainer = fiber;
 }
 
+/**
+ * 任务循环
+ * @param deadline
+ */
 function workLoop(deadline) {
+  // 如果子任务不存在，则获取子任务
   if (!subTask) {
     subTask = getFirstTask();
   }
@@ -215,5 +255,14 @@ export function render(element, dom) {
     props: { children: element },
   });
 
+  requestIdleCallback(performTask);
+}
+
+export function scheduleUpdate(instance, partialState) {
+  taskQueue.push({
+    from: "class_component", // 区分任务类型
+    instance,
+    partialState,
+  });
   requestIdleCallback(performTask);
 }
