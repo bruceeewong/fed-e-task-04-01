@@ -2,7 +2,8 @@
   "name": "fed-e-task-04-01",
   "private": true,
   "scripts": {
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "format": "prettier --ignore-unknown --no-error-on-unmatched-pattern --write \"**/*.js\""
   },
   "lint-staged": {
     "*.js": [
