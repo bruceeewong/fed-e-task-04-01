@@ -1,4 +1,4 @@
-import { arrified, createStateNode, createTaskQueue } from "../Misc";
+import { arrified, createStateNode, createTaskQueue, getTag } from "../Misc";
 
 const taskQueue = createTaskQueue();
 
@@ -34,7 +34,7 @@ function reconcileChildren(fiber, children) {
     newFiber = {
       type: element.type,
       props: element.props,
-      tag: "host_component",
+      tag: getTag(element),
       effects: [],
       effectTag: "placement",
       stateNode: null,
@@ -56,7 +56,6 @@ function reconcileChildren(fiber, children) {
 
 function executeTask(fiber) {
   // 编排子节点关系
-  console.log({ ...fiber });
   reconcileChildren(fiber, fiber.props.children);
   console.log(fiber);
   return null;
