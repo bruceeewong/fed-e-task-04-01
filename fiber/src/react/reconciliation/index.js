@@ -60,6 +60,16 @@ function executeTask(fiber) {
   if (fiber.child) {
     return fiber.child;
   }
+
+  let currentExecutingFiber = fiber;
+
+  while (currentExecutingFiber.parent) {
+    if (currentExecutingFiber.sibling) {
+      return currentExecutingFiber.sibling;
+    }
+    currentExecutingFiber = currentExecutingFiber.parent;
+  }
+
   console.log(fiber);
   return;
 }
