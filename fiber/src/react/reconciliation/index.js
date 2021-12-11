@@ -1,4 +1,4 @@
-import {createTaskQueue} from "../Misc";
+import { arrified, createStateNode, createTaskQueue } from "../Misc";
 
 const taskQueue = createTaskQueue();
 
@@ -13,24 +13,62 @@ function getFirstTask() {
   return {
     props: task.props,
     stateNode: task.dom,
-    tag: 'host_root',
+    tag: "host_root",
     effects: [],
     child: null,
+  };
+}
+
+function reconcileChildren(fiber, children) {
+  // children有可能是单个对象，也可能是数组，统一为数组
+  const arrifiedChildren = arrified(children);
+
+  let index = 0;
+  let numberOfElements = arrifiedChildren.length;
+  let element = null;
+  let newFiber = null;
+  let prevFiber = null;
+
+  while (index < numberOfElements) {
+    element = arrifiedChildren[index];
+    newFiber = {
+      type: element.type,
+      props: element.props,
+      tag: "host_component",
+      effects: [],
+      effectTag: "placement",
+      stateNode: null,
+      parent: fiber,
+    };
+
+    newFiber.stateNode = createStateNode(newFiber);
+
+    if (index === 0) {
+      fiber.child = newFiber;
+    } else {
+      prevFiber.sibling = newFiber;
+    }
+
+    prevFiber = newFiber;
+    index++;
   }
 }
 
 function executeTask(fiber) {
-  console.log(fiber)
+  // 编排子节点关系
+  console.log({ ...fiber });
+  reconcileChildren(fiber, fiber.props.children);
+  console.log(fiber);
   return null;
 }
 
 function workLoop(deadline) {
   if (!subTask) {
-    subTask = getFirstTask()
+    subTask = getFirstTask();
   }
 
   while (subTask && deadline.timeRemaining() > 1) {
-    subTask = executeTask(subTask)
+    subTask = executeTask(subTask);
   }
 }
 
@@ -38,7 +76,7 @@ function performTask(deadline) {
   workLoop(deadline);
 
   if (subTask || !taskQueue.isEmpty()) {
-    requestIdleCallback(performTask)
+    requestIdleCallback(performTask);
   }
 }
 
@@ -53,8 +91,8 @@ export function render(element, dom) {
    */
   taskQueue.push({
     dom,
-    props: {children: element},
+    props: { children: element },
   });
 
-  requestIdleCallback(performTask)
+  requestIdleCallback(performTask);
 }
